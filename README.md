@@ -12,8 +12,13 @@ gövde 17 px, dokunma alanları en az 48 px, yüklenirken iskelet (dönen halka 
 - **Girişsiz:** usta bul (il/ilçe, iş, marka süzgeci, gün sekmeleri), usta sayfası. Randevu ve mesaj için giriş istenir.
 - **Araç sahibi:** Usta bul · Randevular · Mesajlar · Araçlarım · Hesabım. Randevu: araç ve iş → gün ve saat → özet → kod → tamam.
   Randevu iptali, puanlama, ustaya mesaj, yol tarifi (Google Haritalar).
+  Randevuya dokununca iş takibi: aracın durumu, ustanın ek iş önerisini onaylama, servis kaydı.
+  Aracın sayfası: hatırlatıcılar (muayene, sigorta, kasko, bakım, lastik) ve servis geçmişi.
+  Fiyat teklifi iste (Randevularım ve Hesabım'dan), gelen teklifleri karşılaştır, dolu güne "boşalınca haber ver".
 - **Usta:** Özet · Randevular · Mesajlar · Takvim. Talebi onayla/reddet, sonuçlandır, iptal et, elden randevu ekle, saat kapat,
-  müşteriyi ara, müşteriye yaz. Çalışma saatleri, belgeler ve başvuru sitede düzenlenir (uygulama bağlantıyla açar).
+  müşteriyi ara, müşteriye yaz. İş takibi (durum, ek iş önerisi, servis kaydı), bölgedeki teklif taleplerine fiyat verme,
+  kendi bağlantısını WhatsApp'tan paylaşma ve QR afiş (sitede yazdırılır).
+  Çalışma saatleri, belgeler ve başvuru sitede düzenlenir (uygulama bağlantıyla açar).
 - Sitede kalanlar: usta başvurusu ve belge yükleme, şifre yenileme, hesap silme, yönetim paneli.
 
 ## Dosyalar
@@ -24,7 +29,7 @@ gövde 17 px, dokunma alanları en az 48 px, yüklenirken iskelet (dönen halka 
 | `lib/api.dart` | Siteyle konuşan tek yer (oturum çerezi güvenli depoda) |
 | `lib/tema.dart` | Renkler, köşeler, yazılar (sitenin `globals.css` değerleri) |
 | `lib/bilesenler.dart` | Ortak parçalar: başlık, panel, satırlar, seçim sayfası, saat ızgarası, rozetler, iskelet, alt çubuk |
-| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart` |
+| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart`, `takip.dart` (iş takibi, aracın sayfası), `teklif.dart` (teklifler, usta bağlantısı) |
 | `test/` | Birim ve bileşen denemeleri: `flutter test` |
 | `araclar/onizleme.mjs` | Web önizlemesi (uygulamayı tarayıcıda siteyle aynı adresten açar) |
 
@@ -65,5 +70,6 @@ ve `http://localhost:3300`.
 
 - Telefona anlık bildirim (FCM/APNs) yok: yeni mesaj ve talepler uygulama açıkken birkaç saniyede kendiliğinden görünür.
   Uygulama kapalıyken bildirim için Firebase projesi gerekir.
-- Mesaja fotoğraf ekleme uygulamada yok (görüntüleme var); sitede var.
+- Fotoğraf seçme uygulamada yok (mesaj, ek iş önerisi, teklif talebi): `image_picker` paketi gerekir. Fotoğraflar
+  görüntülenir; eklemek için ekrandaki "Sitede aç" kullanılır. Sunucu tarafı hazır (eylemler base64 fotoğraf kabul eder).
 - Konumla arama ("yakınımdaki ustalar") yok; il ve ilçe seçilir.

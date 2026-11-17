@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:kadran/api.dart';
 import 'package:kadran/bilesenler.dart';
+import 'package:kadran/ekranlar/takip.dart';
+import 'package:kadran/ekranlar/teklif.dart';
 import 'package:kadran/tema.dart';
 import 'package:kadran/zaman.dart';
 
@@ -69,6 +71,32 @@ void main() {
     expect(find.text('Onaylandı'), findsOneWidget);
     expect(find.text('3'), findsOneWidget);
     expect(find.bySemanticsLabel('Mesajlar, 3 yeni'), findsOneWidget);
+  });
+
+  test('para yazımı (sitedeki tlYaz ile aynı)', () {
+    expect(tlYaz(2350), '2.350 TL');
+    expect(tlYaz(1250.5), '1.250,50 TL');
+    expect(tlYaz(1250000), '1.250.000 TL');
+    expect(tlYaz(450), '450 TL');
+    expect(fiyatAraligi(2400, 3200), '2.400 TL – 3.200 TL');
+    expect(fiyatAraligi(500, 500), '500 TL');
+  });
+
+  testWidgets('tarih seçici: gün, ay, yıl seçilir, temizlenir', (t) async {
+    String? tarih = '2027-01-31';
+    await t.pumpWidget(_sar(StatefulBuilder(builder: (c, yenile) => TarihSecici(etiket: 'Muayene', deger: tarih, onSec: (v) => yenile(() => tarih = v)))));
+    expect(find.text('31'), findsOneWidget);
+    expect(find.text('Ocak'), findsOneWidget);
+    // Şubat seçilince 31 gün yok: ayın son gününe çekilir.
+    await t.tap(find.text('Ocak'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Şubat'));
+    await t.pumpAndSettle();
+    expect(tarih, '2027-02-28');
+    await t.tap(find.text('Temizle'));
+    await t.pump();
+    expect(tarih, isNull);
+    expect(find.text('Gün'), findsOneWidget);
   });
 
   testWidgets('saat ızgarası seçili saati işaretler', (t) async {

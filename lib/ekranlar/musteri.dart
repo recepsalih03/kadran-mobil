@@ -9,6 +9,8 @@ import '../tema.dart';
 import '../zaman.dart';
 import 'giris.dart';
 import 'mesajlar.dart';
+import 'takip.dart';
+import 'teklif.dart';
 
 /* Araç sahibi yüzü: Usta bul · Randevular · Mesajlar · Araçlarım · Hesabım.
    Girişsiz kişi yalnız usta bulma ekranını görür; randevu ya da mesaj için giriş istenir. */
@@ -334,8 +336,20 @@ class _UstaDetayEkraniState extends State<UstaDetayEkrani> {
                   const SizedBox(height: 16),
                   Text(gunVeTarih(gun), style: Yazi.govdeKalin),
                   const SizedBox(height: 10),
-                  if (saatler.isEmpty)
-                    const Text('Bu gün boş saat yok. Başka bir güne bak.', style: Yazi.govde)
+                  if (saatler.isEmpty) ...[
+                    const Text('Bu gün boş saat yok. Başka bir gün seç ya da bu gün bir saat boşalınca haber al.', style: Yazi.govde),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () async {
+                        if (!await girisIste(context) || !context.mounted) return;
+                        if (Oturum.ben.kullanici?.rol != 'musteri') return bildir(context, 'Bekleme listesine araç sahibi hesabıyla girebilirsin.');
+                        final s = await Api.ben.eylem('bekleme-gir', {'slug': widget.slug, 'gun': gun, 'arac': '', 'hizmet': widget.hizmet});
+                        if (!context.mounted) return;
+                        bildir(context, s.yonlendir?.contains('bekleme=1') == true ? 'Tamam, bu gün boşalınca haber vereceğiz.' : (s.hata ?? 'Kaydedilemedi. Yeniden dene.'));
+                      },
+                      child: const Text('Bu gün boşalınca haber ver'),
+                    ),
+                  ]
                   else ...[
                     SaatIzgarasi(saatler: saatler, secili: saat, onSec: (s) => setState(() => _saat = s)),
                     const SizedBox(height: 16),
@@ -755,20 +769,71 @@ class RandevularimEkrani extends StatelessWidget {
           final (katalog, v) = veri;
           final bugun = v['bugun'] as String;
           final hepsi = [for (final r in v['randevular'] as List) Map<String, dynamic>.from(r)];
+          final hatirlatmalar = [for (final h in (v['hatirlatmalar'] as List? ?? const [])) Map<String, dynamic>.from(h)];
+          final beklemeler = [for (final b in (v['beklemeler'] as List? ?? const [])) Map<String, dynamic>.from(b)];
           final yaklasan = hepsi.where((r) => (r['gun'] as String).compareTo(bugun) >= 0 && (r['durum'] == 'bekliyor' || r['durum'] == 'onaylandi')).toList()
             ..sort((a, b) => '${a['gun']} ${a['saat']}'.compareTo('${b['gun']} ${b['saat']}'));
           final gecmis = hepsi.where((r) => !yaklasan.contains(r)).toList();
 
-          Widget kart(Map<String, dynamic> r) => Satir(
-                sol: BuyukSaat(r['saat']),
-                baslik: r['ustaAdi'],
-                ayrinti: '${gunVeTarih(r['gun'])} · ${katalog.hizmetAdi(r['hizmet'])} · ${plaka(r['plaka'])}',
-                alt: DurumRozeti(r['durum']),
-                onTap: () => _ayrinti(context, katalog, r, bugun, yenile),
-              );
+          Widget kart(Map<String, dynamic> r) {
+            final durum = katalog.isDurumu(r['isDurumu']);
+            final bekleyen = (r['bekleyenTeklif'] as num? ?? 0) > 0;
+            return Satir(
+              sol: BuyukSaat(r['saat']),
+              baslik: r['ustaAdi'],
+              ayrinti: '${gunVeTarih(r['gun'])} · ${katalog.hizmetAdi(r['hizmet'])} · ${plaka(r['plaka'])}',
+              alt: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                DurumRozeti(r['durum']),
+                if (durum != null && r['durum'] == 'onaylandi') Padding(padding: const EdgeInsets.only(top: 4), child: Text('Aracın: ${durum.kisa}', style: Yazi.govdeKalin)),
+                if (bekleyen) Padding(padding: const EdgeInsets.only(top: 4), child: Text('Ek iş onayın bekleniyor', style: Yazi.govdeKalin.copyWith(color: Renk.bekle))),
+              ]),
+              onTap: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: r['id'])));
+                yenile();
+              },
+            );
+          }
 
           return Sayfa(children: [
             const Konum(baslik: 'Randevularım'),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TekliflerimEkrani())),
+              icon: const Icon(Icons.request_quote_outlined),
+              label: const Text('Fiyat teklifi iste'),
+            ),
+            const SizedBox(height: 16),
+            for (final h in hatirlatmalar) ...[
+              _HatirlatmaKarti(h: h, tur: katalog.hatirlatici(h['tur'])),
+              const SizedBox(height: 8),
+            ],
+            for (final b in beklemeler) ...[
+              Panel(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('${b['ustaAdi']} · ${gunVeTarih(b['gun'])}', style: Yazi.govdeKalin),
+                  Text(b['bildirildi'] == true ? 'Boş saat açıldı, haber verdik.' : 'Bu gün boşalınca haber vereceğiz.', style: Yazi.ikincil),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UstaDetayEkrani(slug: b['ustaSlug'], gun: b['gun']))),
+                        child: const Text('Saatlere bak'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () async {
+                        await Api.ben.eylem('bekleme-cik', {'id': b['id']});
+                        if (context.mounted) bildir(context, 'Bekleme kaldırıldı.');
+                        yenile();
+                      },
+                      child: const Text('Vazgeç'),
+                    ),
+                  ]),
+                ]),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (hatirlatmalar.isNotEmpty || beklemeler.isNotEmpty) const SizedBox(height: 8),
             if (hepsi.isEmpty)
               BosEkran(
                 baslik: 'Henüz randevun yok',
@@ -781,66 +846,33 @@ class RandevularimEkrani extends StatelessWidget {
           ]);
         },
       );
+}
 
-  void _ayrinti(BuildContext context, Katalog katalog, Map<String, dynamic> r, String bugun, Future<void> Function() yenile) {
-    final iptalEdilir = (r['durum'] == 'bekliyor' || r['durum'] == 'onaylandi') && (r['gun'] as String).compareTo(bugun) >= 0;
-    showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(Kose.pano))),
-      builder: (sayfa) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('${gunVeTarih(r['gun'])} · ${r['saat']}', style: Yazi.bolum),
+/// Yaklaşan hatırlatma (muayene, sigorta, …): mor zeminli kart; o işe bakan ustalar varsa "Boş saatlere bak".
+class _HatirlatmaKarti extends StatelessWidget {
+  const _HatirlatmaKarti({required this.h, required this.tur});
+  final Map<String, dynamic> h;
+  final HatirlaticiTuru? tur;
+  @override
+  Widget build(BuildContext context) => Panel(
+        renk: Renk.bekleZemin,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('${tur?.ad ?? h['tur']}: ${gunVeTarih(h['tarih'])}', style: Yazi.govdeKalin.copyWith(color: Renk.bekle)),
+          Text('${plaka(h['plaka'])} · ${tur?.oneri ?? ''}', style: Yazi.govde),
           const SizedBox(height: 8),
-          DurumRozeti(r['durum']),
-          const SizedBox(height: 12),
-          Text('${r['ustaAdi']} · ${r['firma']}', style: Yazi.govdeKalin),
-          Text('${katalog.hizmetAdi(r['hizmet'])} · ${r['plaka']}', style: Yazi.govde),
-          if (r['not'] != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Notun: “${r['not']}”', style: Yazi.ikincil)),
-          if (r['aciklama'] != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text('${r['aciklama']}', style: Yazi.ikincil)),
-          const SizedBox(height: 18),
-          OutlinedButton.icon(
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(backgroundColor: Colors.white),
             onPressed: () {
-              Navigator.pop(sayfa);
-              Navigator.push(context, MaterialPageRoute(builder: (_) => SohbetEkrani(ustaSlug: r['ustaSlug'], baslik: r['ustaAdi'])));
+              if (tur?.hizmet != null) {
+                musteriSekmesi.value = 0;
+              } else {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => AracEkrani(aracId: h['aracId'])));
+              }
             },
-            icon: const Icon(Icons.chat_bubble_outline, size: 20),
-            label: const Text('Ustaya yaz'),
+            child: Text(tur?.hizmet != null ? 'Ustalara bak' : 'Tarihi güncelle'),
           ),
-          if (r['durum'] == 'tamamlandi' && r['puanlandi'] != true) ...[
-            const SizedBox(height: 8),
-            AnaDugme(
-              etiket: 'Ustayı puanla',
-              onPressed: () async {
-                Navigator.pop(sayfa);
-                await Navigator.push(context, MaterialPageRoute(builder: (_) => PuanlaEkrani(randevu: r)));
-                yenile();
-              },
-            ),
-          ],
-          if (iptalEdilir) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(foregroundColor: Renk.hayir, side: const BorderSide(color: Renk.hayir, width: 1.5)),
-              onPressed: () async {
-                final evet = await onaySor(sayfa, 'Randevuyu iptal et', '${gunVeTarih(r['gun'])} ${r['saat']} randevun iptal edilecek ve ustaya haber verilecek.', 'Evet, iptal et');
-                if (!evet || !sayfa.mounted) return;
-                final s = await Api.ben.eylem('randevu-iptal', {'id': r['id']});
-                if (!sayfa.mounted) return;
-                Navigator.pop(sayfa);
-                if (context.mounted) bildir(context, s.yonlendir?.contains('iptal=1') == true ? 'Randevun iptal edildi.' : (s.hata ?? 'Randevu iptal edilemedi.'));
-                yenile();
-              },
-              child: const Text('Randevuyu iptal et'),
-            ),
-          ],
         ]),
-      ),
-    );
-  }
+      );
 }
 
 /// Evet/hayır sorusu (geri alınamayan işlemden önce).
@@ -937,7 +969,7 @@ class AraclarimEkrani extends StatelessWidget {
           return Sayfa(children: [
             const Konum(baslik: 'Araçlarım'),
             if (araclar.isEmpty)
-              const BosEkran(baslik: 'Henüz aracın yok', aciklama: 'Randevu alırken ustanın aracına bakıp bakmadığını görmek için aracını ekle.')
+              const BosEkran(baslik: 'Henüz aracın yok', aciklama: 'Aracını ekle: ustalar aracına bakıyor mu görürsün, muayene ve sigorta tarihlerini hatırlatırız.')
             else
               Satirlar(children: [
                 for (final a in araclar)
@@ -945,7 +977,7 @@ class AraclarimEkrani extends StatelessWidget {
                     baslik: '${a['plaka']}',
                     ayrinti: [ '${a['markaAdi']} ${a['model']}', if (a['yil'] != null) '${a['yil']}', if (a['yakit'] != null) '${a['yakit']}'].join(' · '),
                     onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => AracEkleEkrani(arac: a)));
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => AracEkrani(aracId: a['id'])));
                       yenile();
                     },
                   ),
@@ -1118,6 +1150,16 @@ class HesabimEkrani extends StatelessWidget {
               Text(k.ad, style: Yazi.bolum.copyWith(fontSize: 21)),
               Text(k.telefon != null ? telefonYaz(k.telefon!) : (k.eposta ?? ''), style: Yazi.ikincil),
             ]),
+          ),
+        ]),
+      ),
+      Bolum(
+        baslik: 'Teklifler',
+        child: Satirlar(children: [
+          Satir(
+            baslik: 'Tekliflerim',
+            ayrinti: 'Fiyatı belirsiz işe ustalardan fiyat al',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TekliflerimEkrani())),
           ),
         ]),
       ),

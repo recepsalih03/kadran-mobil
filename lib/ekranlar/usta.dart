@@ -10,6 +10,8 @@ import '../zaman.dart';
 import 'giris.dart';
 import 'mesajlar.dart';
 import 'musteri.dart' show onaySor;
+import 'takip.dart';
+import 'teklif.dart';
 
 /* Usta yüzü: Özet · Randevular · Mesajlar · Takvim. Ustanın günlük işleri burada:
    talebi onayla ya da reddet, randevuyu sonuçlandır, elden randevu ekle, saat kapat, müşteriye yaz.
@@ -86,11 +88,17 @@ Future<_Randevular> _randevulariYukle() async {
 class UstaOzetEkrani extends StatelessWidget {
   const UstaOzetEkrani({super.key});
   @override
-  Widget build(BuildContext context) => VeriEkrani<(Map<String, dynamic>, _Randevular, Katalog)>(
+  Widget build(BuildContext context) => VeriEkrani<(Map<String, dynamic>, _Randevular, Katalog, List<dynamic>)>(
         yenileme: const Duration(seconds: 15),
-        yukle: () async => (await Api.ben.veri('usta-ben'), await _randevulariYukle(), await Katalog.al()),
-        icerik: (context, veri, _) {
-          final (ben, r, katalog) = veri;
+        yukle: () async => (
+          await Api.ben.veri('usta-ben'),
+          await _randevulariYukle(),
+          await Katalog.al(),
+          (await Api.ben.veri('usta-talepleri'))['talepler'] as List,
+        ),
+        icerik: (context, veri, yenile) {
+          final (ben, r, katalog, talepler) = veri;
+          final yeniTalep = talepler.where((t) => t['benimTeklif'] == null).length;
           final k = Oturum.ben.kullanici!;
           final bekleyen = r.bekleyen;
           final bugunku = r.onayli.where((x) => x['tarih'] == r.bugun && x['tur'] != 'kapali').toList();
@@ -136,6 +144,26 @@ class UstaOzetEkrani extends StatelessWidget {
                         ),
                     ]),
             ),
+            Bolum(
+              baslik: 'Teklif talepleri',
+              aciklama: 'Bölgendeki araç sahipleri fiyat soruyor.',
+              child: Satirlar(children: [
+                Satir(
+                  baslik: yeniTalep > 0 ? '$yeniTalep talep fiyatını bekliyor' : 'Yeni talep yok',
+                  ayrinti: talepler.isEmpty ? 'Yeni talep gelince haber veririz.' : '${talepler.length} açık talep',
+                  onTap: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => const UstaTaleplerEkrani()));
+                    yenile();
+                  },
+                ),
+              ]),
+            ),
+            if (ben['baglanti'] != null)
+              Bolum(
+                baslik: 'Müşterilerine bağlantını ver',
+                aciklama: "WhatsApp'tan yolla ya da QR afişi dükkâna as. Müşteri doğrudan senin boş saatlerini görür.",
+                child: BaglantiKarti(baglanti: ben['baglanti'], firma: ben['firma']),
+              ),
             Bolum(
               baslik: 'İşyerim',
               child: Satirlar(children: [
@@ -284,8 +312,23 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
             ),
           ),
         ] else if (x['durum'] == 'onaylandi') ...[
+          if (!kapali && !elden) ...[
+            AnaDugme(
+              etiket: 'İş takibi: durum, ek iş, servis',
+              simge: Icons.arrow_forward,
+              onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: x['id'], usta: true)));
+                yenile();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
           if (!kapali && gunuGeldi) ...[
-            AnaDugme(etiket: 'İş tamamlandı', simge: Icons.check, onPressed: () => _karar(yenile, {'id': x['id'], 'karar': 'tamamla'})),
+            // Elden randevuda ana düğme; site randevusunda iş takibi ana düğmedir, bu ikincil kalır.
+            if (elden)
+              AnaDugme(etiket: 'İş tamamlandı', simge: Icons.check, onPressed: () => _karar(yenile, {'id': x['id'], 'karar': 'tamamla'}))
+            else
+              SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => _karar(yenile, {'id': x['id'], 'karar': 'tamamla'}), child: const Text('İş tamamlandı'))),
             const SizedBox(height: 8),
             SizedBox(width: double.infinity, child: OutlinedButton(onPressed: () => _karar(yenile, {'id': x['id'], 'karar': 'gelmedi'}), child: const Text('Müşteri gelmedi'))),
             const SizedBox(height: 8),
@@ -314,6 +357,12 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
               ),
             ),
         ],
+        if (x['durum'] == 'tamamlandi' && !elden)
+          TextButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: x['id'], usta: true))),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('Servis kaydı'),
+          ),
         if (!kapali) ...[
           const SizedBox(height: 4),
           Wrap(spacing: 4, children: [
