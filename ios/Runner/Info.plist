@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Hasarın ya da arızalı parçanın fotoğrafını çekip ustaya göstermek için.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galerideki bir fotoğrafı ustaya göndermek için.</string>
 </dict>
 </plist>

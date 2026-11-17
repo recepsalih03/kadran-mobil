@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -5,6 +7,7 @@ import 'package:kadran/api.dart';
 import 'package:kadran/bilesenler.dart';
 import 'package:kadran/ekranlar/takip.dart';
 import 'package:kadran/ekranlar/teklif.dart';
+import 'package:kadran/foto.dart';
 import 'package:kadran/tema.dart';
 import 'package:kadran/zaman.dart';
 
@@ -97,6 +100,22 @@ void main() {
     await t.pump();
     expect(tarih, isNull);
     expect(find.text('Gün'), findsOneWidget);
+  });
+
+  testWidgets('fotoğraf alanı: önizleme, kaldırma, sınır', (t) async {
+    // 1x1 PNG
+    final png = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
+    var fotolar = [SecilenFoto('a.png', 'image/png', png), SecilenFoto('b.png', 'image/png', png)];
+    await t.pumpWidget(_sar(StatefulBuilder(builder: (c, yenile) => FotoAlani(fotolar: fotolar, enCok: 2, onDegis: (f) => yenile(() => fotolar = f)))));
+    // Sınıra gelince ekleme düğmesi yok.
+    expect(find.text('Fotoğraf çek ya da seç'), findsNothing);
+    expect(find.text('Bir fotoğraf daha ekle'), findsNothing);
+    await t.tap(find.byTooltip('Fotoğraf 1: kaldır'));
+    await t.pump();
+    expect(fotolar.map((f) => f.ad), ['b.png']);
+    expect(find.text('Bir fotoğraf daha ekle'), findsOneWidget);
+    expect(fotolar.first.alan['tur'], 'image/png');
+    expect(base64Decode(fotolar.first.alan['dosya']!), png);
   });
 
   testWidgets('saat ızgarası seçili saati işaretler', (t) async {

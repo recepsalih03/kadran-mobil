@@ -3,10 +3,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
 import '../bilesenler.dart';
+import '../foto.dart';
 import '../katalog.dart';
 import '../tema.dart';
 import '../zaman.dart';
-import 'giris.dart' show siteyiAc;
 import 'mesajlar.dart';
 import 'musteri.dart' show AracEkleEkrani, PuanlaEkrani, onaySor;
 
@@ -63,24 +63,6 @@ class OturumFotosu extends StatelessWidget {
   }
 }
 
-/// Fotoğraf ekleme henüz uygulamada yok: siteden eklenebileceğini söyler.
-class FotoSitedeNotu extends StatelessWidget {
-  const FotoSitedeNotu({super.key, required this.yol, required this.metin});
-  final String yol;
-  final String metin;
-  @override
-  Widget build(BuildContext context) => Panel(
-        renk: Colors.white,
-        dolgu: const EdgeInsets.all(12),
-        child: Row(children: [
-          const Icon(Icons.photo_camera_outlined, color: Renk.murekkep2),
-          const SizedBox(width: 10),
-          Expanded(child: Text(metin, style: Yazi.ikincil)),
-          TextButton(onPressed: () => siteyiAc(yol), child: const Text('Sitede aç')),
-        ]),
-      );
-}
-
 /* ── Randevunun iş takibi ─────────────────────────────────────────────── */
 
 class RandevuTakipEkrani extends StatefulWidget {
@@ -103,6 +85,7 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
   final _tutar = TextEditingController();
   final _km = TextEditingController();
   EylemSonucu? _ekSonuc, _servisSonuc;
+  List<SecilenFoto> _ekFoto = const [];
   bool _bekliyor = false;
   bool _servisDuzelt = false;
 
@@ -263,17 +246,27 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
                         const SizedBox(height: 12),
                         Alan(etiket: 'Fiyatı (TL)', ipucu: 'İşçilik ve parça dahil.', hata: _ekSonuc?.alanlar['tutar'], child: MetinKutusu(kontrol: _ekTutar, klavye: const TextInputType.numberWithOptions(decimal: true), hata: _ekSonuc?.alanlar['tutar'] != null)),
                         const SizedBox(height: 12),
-                        FotoSitedeNotu(yol: '/usta/randevular/${r['id']}', metin: 'Fotoğraflı öneri için sitedeki iş takibi sayfasını kullan.'),
+                        Alan(
+                          etiket: 'Fotoğraf (isteğe bağlı)',
+                          ipucu: 'Müşteri görünce daha kolay onaylar.',
+                          child: FotoAlani(fotolar: _ekFoto, onDegis: (f) => setState(() => _ekFoto = f), hata: _ekSonuc?.alanlar['foto']),
+                        ),
                         const SizedBox(height: 14),
                         AnaDugme(
                           etiket: 'Müşterinin onayına gönder',
                           bekliyor: _bekliyor,
                           onPressed: () async {
-                            final s = await _calistir('teklif-ekle', {'id': r['id'], 'aciklama': _ekAciklama.text, 'tutar': _ekTutar.text});
+                            final s = await _calistir('teklif-ekle', {
+                              'id': r['id'],
+                              'aciklama': _ekAciklama.text,
+                              'tutar': _ekTutar.text,
+                              if (_ekFoto.isNotEmpty) 'foto': _ekFoto.first.alan,
+                            });
                             setState(() => _ekSonuc = s);
                             if (s.hata == null) {
                               _ekAciklama.clear();
                               _ekTutar.clear();
+                              setState(() => _ekFoto = const []);
                             }
                           },
                         ),

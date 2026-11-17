@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../api.dart';
 import '../bilesenler.dart';
+import '../foto.dart';
 import '../katalog.dart';
 import '../oturum.dart';
 import '../tema.dart';
@@ -93,14 +94,15 @@ class _SohbetEkraniState extends State<SohbetEkrani> {
     return Map<String, dynamic>.from(v['konusma']);
   }
 
-  Future<void> _gonder(String metin) async {
-    if (metin.trim().isEmpty) return;
+  Future<void> _gonder(String metin, {SecilenFoto? foto}) async {
+    if (metin.trim().isEmpty && foto == null) return;
     setState(() {
       _bekliyor = true;
       _hata = null;
     });
     final alanlar = <String, Object?>{
       'm': metin,
+      if (foto != null) 'foto': foto.alan,
       if (_id != null) 'konusma': _id else if (widget.ustaSlug != null) 'usta': widget.ustaSlug else 'randevu': widget.randevuId,
     };
     final s = await Api.ben.eylem('mesaj-gonder', alanlar);
@@ -199,6 +201,21 @@ class _SohbetEkraniState extends State<SohbetEkrani> {
               ),
               const SizedBox(height: 8),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                SizedBox(
+                  height: 52,
+                  width: 52,
+                  child: IconButton.outlined(
+                    tooltip: 'Fotoğraf gönder',
+                    onPressed: _bekliyor
+                        ? null
+                        : () async {
+                            final f = await fotoSec(context);
+                            if (f.isNotEmpty) await _gonder(_metin.text, foto: f.first);
+                          },
+                    icon: const Icon(Icons.photo_camera_outlined),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(child: TextField(controller: _metin, minLines: 1, maxLines: 5, maxLength: 1000, style: Yazi.govde, decoration: const InputDecoration(hintText: 'Mesaj yaz', counterText: ''))),
                 const SizedBox(width: 8),
                 SizedBox(

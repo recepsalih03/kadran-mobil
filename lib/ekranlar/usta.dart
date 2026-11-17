@@ -357,7 +357,7 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
               ),
             ),
         ],
-        if (x['durum'] == 'tamamlandi' && !elden)
+        if (x['durum'] == 'tamamlandi' && !elden && x['silinmis'] != true)
           TextButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: x['id'], usta: true))),
             icon: const Icon(Icons.receipt_long_outlined),
@@ -372,7 +372,7 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
                 icon: const Icon(Icons.phone_outlined),
                 label: Text('Ara · $telefon'),
               ),
-            if (!elden)
+            if (!elden && x['silinmis'] != true)
               TextButton.icon(
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SohbetEkrani(randevuId: x['id'], baslik: x['musteri']))),
                 icon: const Icon(Icons.chat_bubble_outline),

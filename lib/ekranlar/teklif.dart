@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
 import '../bilesenler.dart';
+import '../foto.dart';
 import '../katalog.dart';
 import '../oturum.dart';
 import '../tema.dart';
@@ -194,6 +195,7 @@ class TeklifIsteEkrani extends StatefulWidget {
 class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
   String? _arac, _hizmet, _il, _ilce;
   final _aciklama = TextEditingController();
+  List<SecilenFoto> _fotolar = const [];
   EylemSonucu? _sonuc;
   bool _bekliyor = false;
 
@@ -214,7 +216,7 @@ class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
             _arac ??= araclar.firstOrNull?['id'];
             final h = _sonuc?.alanlar ?? const {};
             return Sayfa(children: [
-              const Konum(baslik: 'Teklif iste', aciklama: 'Fiyatı bilmediğin bir iş mi var? Anlat, bölgendeki ustalar fiyat versin.'),
+              const Konum(baslik: 'Teklif iste', aciklama: 'Fiyatı bilmediğin bir iş mi var? Fotoğraf yolla, bölgendeki ustalar fiyat versin.'),
               if (araclar.isEmpty)
                 const BosEkran(baslik: 'Önce aracını ekle', aciklama: 'Ustalar hangi araç için fiyat verdiklerini bilmeli. Araçlarım sekmesinden ekleyebilirsin.')
               else ...[
@@ -251,7 +253,11 @@ class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
                   child: MetinKutusu(kontrol: _aciklama, satir: 4, hata: h['aciklama'] != null),
                 ),
                 const SizedBox(height: 14),
-                const FotoSitedeNotu(yol: '/teklif-iste', metin: 'Fotoğraflı talep için siteyi kullan. Fotoğraflı talepler daha doğru fiyat alır.'),
+                Alan(
+                  etiket: 'Fotoğraflar (en çok 3, isteğe bağlı ama önerilir)',
+                  ipucu: 'Hasarı ya da arızalı parçayı yakından ve uzaktan çek.',
+                  child: FotoAlani(fotolar: _fotolar, enCok: 3, onDegis: (f) => setState(() => _fotolar = f), hata: h['foto']),
+                ),
                 const SizedBox(height: 14),
                 SecimKutusu(
                   etiket: 'Aracın hangi ilde?',
@@ -283,7 +289,14 @@ class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
                   bekliyor: _bekliyor,
                   onPressed: () async {
                     setState(() => _bekliyor = true);
-                    final s = await Api.ben.eylem('talep-ac', {'arac': _arac, 'hizmet': _hizmet ?? '', 'aciklama': _aciklama.text, 'il': _il ?? '', 'ilce': _ilce ?? ''});
+                    final s = await Api.ben.eylem('talep-ac', {
+                      'arac': _arac,
+                      'hizmet': _hizmet ?? '',
+                      'aciklama': _aciklama.text,
+                      'il': _il ?? '',
+                      'ilce': _ilce ?? '',
+                      'foto': [for (final f in _fotolar) f.alan],
+                    });
                     if (!context.mounted) return;
                     setState(() {
                       _bekliyor = false;
