@@ -16,6 +16,7 @@ gövde 17 px, dokunma alanları en az 48 px, yüklenirken iskelet (dönen halka 
   Aracın sayfası: hatırlatıcılar (muayene, sigorta, kasko, bakım, lastik) ve servis geçmişi.
   Fiyat teklifi iste (Randevularım ve Hesabım'dan), gelen teklifleri karşılaştır, dolu güne "boşalınca haber ver".
   Fotoğraf: mesajda, teklif talebinde (en çok 3) ve ustanın ek iş önerisinde kamerayla çekilir ya da galeriden seçilir.
+  "Aracında ne oluyor?" soru ağacı (Usta bul ekranından): birkaç soruyla olası iş, aciliyet, o işi yapan ustalar ya da teklif.
 - **Usta:** Özet · Randevular · Mesajlar · Takvim. Talebi onayla/reddet, sonuçlandır, iptal et, elden randevu ekle, saat kapat,
   müşteriyi ara, müşteriye yaz. İş takibi (durum, ek iş önerisi, servis kaydı), bölgedeki teklif taleplerine fiyat verme,
   kendi bağlantısını WhatsApp'tan paylaşma ve QR afiş (sitede yazdırılır).
@@ -28,11 +29,13 @@ gövde 17 px, dokunma alanları en az 48 px, yüklenirken iskelet (dönen halka 
 |---|---|
 | `lib/main.dart` | Giriş noktası; oturuma göre araç sahibi ya da usta yüzü |
 | `lib/api.dart` | Siteyle konuşan tek yer (oturum çerezi güvenli depoda) |
+| `lib/dert.dart` | Soru ağacında yürüme (ağaç sunucudan gelir) |
 | `lib/foto.dart` | Fotoğraf seçme (kamera ya da galeri, `image_picker`): telefonda küçültür, base64 olarak gönderir |
 | `lib/tema.dart` | Renkler, köşeler, yazılar (sitenin `globals.css` değerleri) |
 | `lib/bilesenler.dart` | Ortak parçalar: başlık, panel, satırlar, seçim sayfası, saat ızgarası, rozetler, iskelet, alt çubuk |
-| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart`, `takip.dart` (iş takibi, aracın sayfası), `teklif.dart` (teklifler, usta bağlantısı) |
+| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart`, `takip.dart` (iş takibi, aracın sayfası), `teklif.dart` (teklifler, usta bağlantısı), `dert_ekrani.dart` (soru ağacı) |
 | `test/` | Birim ve bileşen denemeleri: `flutter test` |
+| `TEST-SENARYOLARI.md` | Telefonda elle test planı: kurulum, APK yükleme, senaryolar |
 | `araclar/onizleme.mjs` | Web önizlemesi (uygulamayı tarayıcıda siteyle aynı adresten açar) |
 
 ## Çalıştırma

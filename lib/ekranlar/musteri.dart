@@ -11,6 +11,7 @@ import 'giris.dart';
 import 'mesajlar.dart';
 import 'takip.dart';
 import 'teklif.dart';
+import 'dert_ekrani.dart';
 
 /* Araç sahibi yüzü: Usta bul · Randevular · Mesajlar · Araçlarım · Hesabım.
    Girişsiz kişi yalnız usta bulma ekranını görür; randevu ya da mesaj için giriş istenir. */
@@ -87,7 +88,9 @@ class _MusteriKabukState extends State<MusteriKabuk> {
 /* ── Usta bul ─────────────────────────────────────────────────────────── */
 
 class UstaBulEkrani extends StatefulWidget {
-  const UstaBulEkrani({super.key});
+  const UstaBulEkrani({super.key, this.hizmet});
+  /// Başka ekrandan (soru ağacı) bir işle açılınca süzgeç o işle başlar.
+  final String? hizmet;
   @override
   State<UstaBulEkrani> createState() => _UstaBulEkraniState();
 }
@@ -97,6 +100,12 @@ class _UstaBulEkraniState extends State<UstaBulEkrani> {
   String _hizmet = '', _marka = '';
   String? _gun;
   int _surum = 0; // süzgeç değişince yeniden yükle
+
+  @override
+  void initState() {
+    super.initState();
+    _hizmet = widget.hizmet ?? '';
+  }
 
   String? get _yer => _il == null ? null : (_ilce == null || _ilce!.isEmpty ? _il : '$_il/$_ilce');
 
@@ -171,7 +180,15 @@ class _UstaBulEkraniState extends State<UstaBulEkrani> {
                 _surum++;
               }),
             ),
-            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DertEkrani())),
+                icon: const Icon(Icons.help_outline),
+                label: const Text('Ne olduğunu bilmiyor musun? Birkaç soruyla bulalım'),
+              ),
+            ),
+            const SizedBox(height: 4),
             SecimKutusu(
               etiket: 'Araç markası',
               baslik: 'Aracının markası',

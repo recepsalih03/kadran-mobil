@@ -8,6 +8,7 @@ import 'package:kadran/bilesenler.dart';
 import 'package:kadran/ekranlar/takip.dart';
 import 'package:kadran/ekranlar/teklif.dart';
 import 'package:kadran/foto.dart';
+import 'package:kadran/dert.dart';
 import 'package:kadran/tema.dart';
 import 'package:kadran/zaman.dart';
 
@@ -116,6 +117,32 @@ void main() {
     expect(find.text('Bir fotoğraf daha ekle'), findsOneWidget);
     expect(fotolar.first.alan['tur'], 'image/png');
     expect(base64Decode(fotolar.first.alan['dosya']!), png);
+  });
+
+  test('soru ağacı: yürüme, sonuç, geçersiz yol, özet', () {
+    final agac = <String, dynamic>{
+      'kok': {
+        'soru': 'Aracında ne oluyor?',
+        'secenekler': [
+          {'kod': 'ses', 'etiket': 'Bir ses geliyor', 'sonraki': 'ses'},
+          {'kod': 'bilmiyorum', 'etiket': 'Tarif edemiyorum', 'sonuc': {'hizmet': 'cihaz', 'aciliyet': 'yakinda', 'not': 'x'}},
+        ],
+      },
+      'ses': {
+        'soru': 'Ses ne zaman geliyor?',
+        'secenekler': [
+          {'kod': 'fren', 'etiket': 'Fren yaparken (cızırtı)', 'sonuc': {'hizmet': 'balata', 'aciliyet': 'dur', 'not': 'y'}},
+        ],
+      },
+    };
+    expect(dertAdimi(agac, const [])!.soruKodu, 'kok');
+    expect(dertAdimi(agac, ['ses'])!.soru!['soru'], 'Ses ne zaman geliyor?');
+    final son = dertAdimi(agac, ['ses', 'fren'])!;
+    expect(son.sonuc!['hizmet'], 'balata');
+    expect(son.gecmis.length, 2);
+    expect(dertAdimi(agac, ['ses', 'yok']), isNull);
+    expect(dertAdimi(agac, ['bilmiyorum', 'fazla']), isNull);
+    expect(dertOzeti(son, 'Önden ses var'), 'Önden ses var\nSoru ağacındaki cevaplarım: Bir ses geliyor → Fren yaparken.');
   });
 
   testWidgets('saat ızgarası seçili saati işaretler', (t) async {

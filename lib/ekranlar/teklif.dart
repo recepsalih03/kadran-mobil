@@ -187,7 +187,9 @@ class TalepEkrani extends StatelessWidget {
 }
 
 class TeklifIsteEkrani extends StatefulWidget {
-  const TeklifIsteEkrani({super.key});
+  const TeklifIsteEkrani({super.key, this.hizmet, this.aciklama, this.dert});
+  /// Soru ağacından gelindiyse: önerilen iş, cevaplardan hazırlanan açıklama ve kayıt kimliği.
+  final String? hizmet, aciklama, dert;
   @override
   State<TeklifIsteEkrani> createState() => _TeklifIsteEkraniState();
 }
@@ -204,6 +206,8 @@ class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
     super.initState();
     _il = Oturum.ben.kullanici?.il;
     _ilce = Oturum.ben.kullanici?.ilce;
+    _hizmet = widget.hizmet;
+    _aciklama.text = widget.aciklama ?? '';
   }
 
   @override
@@ -296,6 +300,7 @@ class _TeklifIsteEkraniState extends State<TeklifIsteEkrani> {
                       'il': _il ?? '',
                       'ilce': _ilce ?? '',
                       'foto': [for (final f in _fotolar) f.alan],
+                      'dert': ?widget.dert,
                     });
                     if (!context.mounted) return;
                     setState(() {
