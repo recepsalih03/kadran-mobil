@@ -8,6 +8,7 @@ import '../katalog.dart';
 import '../tema.dart';
 import '../zaman.dart';
 import 'mesajlar.dart';
+import 'kayitlar.dart' show FisEkrani, KayitDetayEkrani;
 import 'musteri.dart' show AracEkleEkrani, PuanlaEkrani, onaySor;
 
 /* İş takibi ve aracın sayfası (sitedeki /randevularim/<id>, /usta/randevular/<id>, /araclarim/<id>).
@@ -88,6 +89,7 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
   List<SecilenFoto> _ekFoto = const [];
   bool _bekliyor = false;
   bool _servisDuzelt = false;
+  bool _servisAc = false;
 
   static const _iletiler = {
     'durum': 'Aracın durumu güncellendi. Müşteriye haber verdik.',
@@ -119,7 +121,11 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
         body: VeriEkrani<(Katalog, Map<String, dynamic>)>(
           key: _anahtar,
           yenileme: const Duration(seconds: 20),
-          yukle: () async => (await Katalog.al(), Map<String, dynamic>.from((await Api.ben.veri('randevu', {'id': widget.id}))['randevu'])),
+          yukle: () async {
+            final v = await Api.ben.veri('randevu', {'id': widget.id});
+            // Ustaya ayrıca: aynı aracın önceki işleri ve servis kaydı hatırlatma tercihi.
+            return (await Katalog.al(), {...Map<String, dynamic>.from(v['randevu']), '_onceki': v['onceki'] ?? const [], '_kayitHatirlat': v['kayitHatirlat'] ?? true});
+          },
           icerik: (context, veri, yenile) {
             final (katalog, r) = veri;
             final adimlar = [for (final a in r['adimlar'] as List) Map<String, dynamic>.from(a)];
@@ -291,7 +297,13 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
                       }),
                       child: const Text('Servis kaydını düzelt'),
                     ),
-                  if (widget.usta && ((servis == null && acik && gunuGeldi) || _servisDuzelt))
+                  if (widget.usta && servis == null && acik && gunuGeldi && r['_kayitHatirlat'] == false && !_servisAc && !_servisDuzelt)
+                    TextButton.icon(
+                      onPressed: () => setState(() => _servisAc = true),
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: const Text('Servis kaydı yaz (isteğe bağlı)'),
+                    ),
+                  if (widget.usta && ((servis == null && acik && gunuGeldi && (r['_kayitHatirlat'] != false || _servisAc)) || _servisDuzelt))
                     Panel(
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         if (_servisSonuc?.hata != null) ...[Uyari(tur: UyariTuru.hata, baslik: _servisSonuc!.hata!), const SizedBox(height: 12)],
@@ -328,6 +340,18 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
                 ]),
               ),
 
+              if (widget.usta && (r['_onceki'] as List).isNotEmpty)
+                Bolum(
+                  baslik: 'Bu araca daha önce yaptıkların',
+                  child: Satirlar(children: [
+                    for (final x in r['_onceki'] as List)
+                      Satir(
+                        baslik: '${tarihKisa(x['tarih'])}${x['tutar'] != null ? ' · ${tlYaz(x['tutar'] as num)}' : ''}',
+                        ayrinti: x['yapilanlar'],
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => KayitDetayEkrani(id: x['id']))),
+                      ),
+                  ]),
+                ),
               if (adimlar.isNotEmpty)
                 Bolum(
                   baslik: 'Geçmiş',
@@ -463,6 +487,13 @@ class ServisKarti extends StatelessWidget {
                 [if (s['tutar'] != null) tlYaz(s['tutar'] as num), if (s['km'] != null) '${_binlik((s['km'] as num).toInt())} km'].join(' · '),
                 style: Yazi.ikincil,
               ),
+            ),
+          if (s['id'] != null)
+            TextButton.icon(
+              style: TextButton.styleFrom(padding: EdgeInsets.zero, alignment: Alignment.centerLeft),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FisEkrani(id: s['id']))),
+              icon: const Icon(Icons.receipt_long_outlined, size: 20),
+              label: const Text('Servis fişi'),
             ),
         ]),
       );

@@ -66,7 +66,7 @@ MJ2 ✗ · Kozmetik · En büyük yazı boyutunda "Randevu al" düğmesi taşıy
 
 ## Kısa tur (önce bunlar, yaklaşık 45 dakika)
 
-MA1, MA3, MA5 · MB1, MB3, MB4 · MC1, MC4 · MD1, MD3 · ME2 · MF1, MF3 · MG1, MG2 · MH1, MH3, MH4, MH7 · MK1
+MA1, MA3, MA5 · MB1, MB3, MB4 · MC1, MC4 · MD1, MD3 · ME2 · MF1, MF3 · MG1, MG2 · MH1, MH3, MH4, MH7 · ML1, ML2, ML4 · MK1
 
 ---
 
@@ -145,6 +145,15 @@ MA1, MA3, MA5 · MB1, MB3, MB4 · MC1, MC4 · MD1, MD3 · ME2 · MF1, MF3 · MG1
 - [ ] **MH7 ★ · Bağlantı paylaş.** Özet > "WhatsApp'tan paylaş". → WhatsApp açılır, mesajda bağlantı hazır. "Kopyala" → "Bağlantı kopyalandı". "QR afiş" → tarayıcıda afiş sayfası (tarayıcıda usta girişi gerekebilir).
 - [ ] **MH8 · Takvim.** Takvim sekmesi. → Çalışma saatleri, süreler, izinler; "Takvimi sitede düzenle" tarayıcıyı açar.
 - [ ] **MH9 · Müşteriyi ara.** Telefonla kayıtlı müşterinin kartında "Ara". → Telefon uygulaması numarayla açılır.
+
+## ML. Ustanın kayıtları
+
+- [ ] **ML1 ★ · Kayıtlar sekmesi.** Usta > alt çubukta "Kayıtlar". → Dönem seçimi, özet kutuları, kayıt listesi, arama, hatırlatma tercihi.
+- [ ] **ML2 ★ · Kayıt ekle.** "Kayıt ekle": müşteri, plaka, araç, iş, tarih (gün/ay/yıl), yapılanlar, tutar > Kaydı yaz. → Listede "Elle yazıldı" ile görünür.
+- [ ] **ML3 · Elden randevudan.** Elden randevunun günü gelince kartında "Servis kaydı yaz (isteğe bağlı)". → Müşteri ve araç dolu gelir.
+- [ ] **ML4 ★ · Servis fişi.** Kayda dokun > "Servis fişi". → Fiş ekranda; "Yazdır ya da PDF (sitede)" tarayıcıda açar. Araç sahibi de servis geçmişindeki "Servis fişi"ne dokunup görebiliyor.
+- [ ] **ML5 · Aynı araç.** Aynı araçla yeni randevuda kartta "Bu araç sana daha önce N kez geldi"; iş takibinde önceki işler.
+- [ ] **ML6 · Hatırlatmayı kapat.** Kayıtlar > Hatırlatmalar > Kapat. → İş takibinde servis formu yerine "Servis kaydı yaz (isteğe bağlı)" düğmesi.
 
 ## MI. Siteye açılan bağlantılar
 

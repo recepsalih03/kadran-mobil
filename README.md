@@ -33,7 +33,7 @@ gövde 17 px, dokunma alanları en az 48 px, yüklenirken iskelet (dönen halka 
 | `lib/foto.dart` | Fotoğraf seçme (kamera ya da galeri, `image_picker`): telefonda küçültür, base64 olarak gönderir |
 | `lib/tema.dart` | Renkler, köşeler, yazılar (sitenin `globals.css` değerleri) |
 | `lib/bilesenler.dart` | Ortak parçalar: başlık, panel, satırlar, seçim sayfası, saat ızgarası, rozetler, iskelet, alt çubuk |
-| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart`, `takip.dart` (iş takibi, aracın sayfası), `teklif.dart` (teklifler, usta bağlantısı), `dert_ekrani.dart` (soru ağacı) |
+| `lib/ekranlar/` | `giris.dart`, `musteri.dart`, `usta.dart`, `mesajlar.dart`, `takip.dart` (iş takibi, aracın sayfası), `teklif.dart` (teklifler, usta bağlantısı), `dert_ekrani.dart` (soru ağacı), `kayitlar.dart` (ustanın servis defteri, servis fişi) |
 | `test/` | Birim ve bileşen denemeleri: `flutter test` |
 | `TEST-SENARYOLARI.md` | Telefonda elle test planı: kurulum, APK yükleme, senaryolar |
 | `IOS.md` | Kendi MacBook'unla iPhone'a kurma rehberi (ücretsiz Apple hesabı, Xcode, Flutter) |

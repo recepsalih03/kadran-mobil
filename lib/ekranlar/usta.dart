@@ -12,6 +12,7 @@ import 'mesajlar.dart';
 import 'musteri.dart' show onaySor;
 import 'takip.dart';
 import 'teklif.dart';
+import 'kayitlar.dart';
 
 /* Usta yüzü: Özet · Randevular · Mesajlar · Takvim. Ustanın günlük işleri burada:
    talebi onayla ya da reddet, randevuyu sonuçlandır, elden randevu ekle, saat kapat, müşteriye yaz.
@@ -52,6 +53,7 @@ class _UstaKabukState extends State<UstaKabuk> {
         UstaRandevularEkrani(key: ValueKey('r$i')),
         MesajlarEkrani(key: ValueKey('m$i')),
         UstaTakvimEkrani(key: ValueKey('t$i')),
+        UstaKayitlarEkrani(key: ValueKey('k$i')),
       ]),
       bottomNavigationBar: AltCubuk(
         secili: i,
@@ -61,6 +63,7 @@ class _UstaKabukState extends State<UstaKabuk> {
           const AltSekme('Randevular', Icons.event_available_outlined),
           AltSekme('Mesajlar', Icons.chat_bubble_outline, rozet: Oturum.ben.okunmamis),
           const AltSekme('Takvim', Icons.calendar_month_outlined),
+          const AltSekme('Kayıtlar', Icons.receipt_long_outlined),
         ],
       ),
     );
@@ -211,6 +214,19 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
     await yenile();
   }
 
+  /// Elden randevunun servis kaydı: varsa açar, yoksa randevunun bilgileriyle form açar.
+  Future<void> _kayitAc(Map<String, dynamic> x, Future<void> Function() yenile) async {
+    if (x['kayitId'] != null) {
+      await Navigator.push(context, MaterialPageRoute(builder: (_) => KayitDetayEkrani(id: x['kayitId'])));
+    } else {
+      await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => KayitFormEkrani(elden: {'randevu': x['id'], 'musteri': x['musteri'], 'telefon': x['telefon'], 'arac': x['arac'], 'hizmet': x['hizmet']})),
+      );
+    }
+    await yenile();
+  }
+
   Future<String?> _nedenSor(String baslik, List<String> nedenler) => secimSayfasi(
         context,
         baslik: baslik,
@@ -291,6 +307,8 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
               Text([gunVeTarih(x['tarih']), if (!kapali) '${x['saat']}–${x['bitis']}', if (isAdi.isNotEmpty) isAdi].join(' · '), style: Yazi.ikincil),
               if (!kapali && ('${x['arac']}${x['plaka']}').isNotEmpty) Text([x['arac'], x['plaka']].where((e) => '$e'.isNotEmpty).join(' · '), style: Yazi.ikincil),
               if (x['not'] != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text('“${x['not']}”', style: Yazi.govde)),
+              if ((x['onceki'] as num? ?? 0) > 0)
+                Padding(padding: const EdgeInsets.only(top: 4), child: Text('Bu araç sana daha önce ${x['onceki']} kez geldi', style: Yazi.govdeKalin.copyWith(color: Renk.bekle))),
               if (kapali && x['aciklama'] != null) Text('${x['aciklama']}', style: Yazi.ikincil),
               if (x['durum'] != 'bekliyor' && x['durum'] != 'onaylandi') Padding(padding: const EdgeInsets.only(top: 6), child: DurumRozeti(x['durum'])),
               if (x['durum'] == 'bekliyor') Padding(padding: const EdgeInsets.only(top: 4), child: Text('Talep geldi: ${x['geldi']}', style: Yazi.kucuk)),
@@ -320,6 +338,17 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
                 await Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: x['id'], usta: true)));
                 yenile();
               },
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (elden && gunuGeldi) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _kayitAc(x, yenile),
+                icon: const Icon(Icons.receipt_long_outlined),
+                label: Text(x['kayitId'] != null ? 'Servis kaydı' : 'Servis kaydı yaz (isteğe bağlı)'),
+              ),
             ),
             const SizedBox(height: 8),
           ],
@@ -357,6 +386,12 @@ class _UstaRandevularEkraniState extends State<UstaRandevularEkrani> {
               ),
             ),
         ],
+        if (x['durum'] == 'tamamlandi' && elden)
+          TextButton.icon(
+            onPressed: () => _kayitAc(x, yenile),
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: Text(x['kayitId'] != null ? 'Servis kaydı' : 'Servis kaydı yaz'),
+          ),
         if (x['durum'] == 'tamamlandi' && !elden && x['silinmis'] != true)
           TextButton.icon(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RandevuTakipEkrani(id: x['id'], usta: true))),
