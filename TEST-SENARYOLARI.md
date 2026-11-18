@@ -1,4 +1,4 @@
-# Kadran mobil — Test planı (Android)
+# Kadran mobil — Test planı (Android ve iPhone)
 
 Uygulamayı gerçek telefonda denemek için. Sitenin planı: `kadran/TEST-SENARYOLARI.md`. İkisi aynı sunucuyu ve aynı hesapları kullanır; bir tarafta yaptığın şey öbür tarafta da görünür.
 
@@ -23,6 +23,10 @@ npm run start -- -p 3000 -H 0.0.0.0
 - Bilgisayarın adresi değiştiyse (PowerShell'de `ipconfig` > Wi-Fi > IPv4 Address artık 192.168.1.218 değilse) bana yeni adresi yaz; uygulamayı o adresle yeniden derlerim.
 
 ### 0.2 Uygulamayı telefona kur
+
+**iPhone kullanıyorsan** bu bölümü atla: kurulum MacBook ile yapılır, adımlar `IOS.md` dosyasında. Senaryolar iPhone'da da aynı (Android geri tuşu yerine soldan kaydırma ya da sol üstteki geri oku).
+
+**Android için:**
 
 Dosya: `C:\Users\recep\Desktop\kadran-mobil\build\app\outputs\flutter-apk\app-debug.apk` (deneme sürümü, yaklaşık 200 MB).
 
@@ -73,7 +77,7 @@ MA1, MA3, MA5 · MB1, MB3, MB4 · MC1, MC4 · MD1, MD3 · ME2 · MF1, MF3 · MG1
 - [ ] **MA3 ★ · Giriş.** "Giriş yap" > Araç sahibi A'nın bilgileri. → Alt çubukta Usta bul · Randevular · Mesajlar · Araçlarım · Hesabım.
 - [ ] **MA4 · Yanlış şifre.** → Sitedeki hata yazısının aynısı.
 - [ ] **MA5 ★ · Oturum hatırlanır.** Uygulamayı tamamen kapat (son uygulamalardan kaydır), yeniden aç. → Yine girişli.
-- [ ] **MA6 · Kayıt.** Çıkış yap > Giriş yap > "Araç sahibi olarak kayıt ol" > bilgiler > "Hesap oluştur" > kod (test modunda ekranda yazar). → Hesap açılır.
+- [ ] **MA6 · Kayıt.** Çıkış yap > Giriş yap > "Araç sahibi olarak kayıt ol" > bilgiler, "Bizi nereden duydun?" (isteğe bağlı) > "Hesap oluştur" > kod (test modunda ekranda yazar). → Hesap açılır.
 - [ ] **MA7 · Usta girişi.** Usta hesabıyla gir. → Alt çubukta Özet · Randevular · Mesajlar · Takvim.
 - [ ] **MA8 · Çıkış.** Hesabım (ustada Özet) > Çıkış yap. → Girişsiz ekrana döner.
 
@@ -103,8 +107,8 @@ MA1, MA3, MA5 · MB1, MB3, MB4 · MC1, MC4 · MD1, MD3 · ME2 · MF1, MF3 · MG1
 - [ ] **MD1 ★ · Randevu ayrıntısı.** Randevular > randevuya dokun. → Tarih, usta, araç, durum; "Ustaya yaz"; uygun durumda "Randevuyu iptal et".
 - [ ] **MD2 · Aracın durumu.** Usta (sitede ya da uygulamada) durumu "Onarımda" yapsın. → Listede "Aracın: Onarımda"; ayrıntıda durum adımları ve ustanın notu.
 - [ ] **MD3 ★ · Ek iş onayı.** Usta fotoğraflı ek iş önersin. → Listede "Ek iş onayın bekleniyor"; ayrıntıda açıklama, fiyat, fotoğraf (dokununca tam ekran, iki parmakla büyür); "Onayla" ya da "İstemiyorum".
-- [ ] **MD4 · Servis kaydı ve puan.** Usta servis kaydını yazsın. → Ayrıntıda servis kaydı; "Ustayı puanla" açılır, yıldız + yorum gönderilir.
-- [ ] **MD5 · İptal.** Yaklaşan bir randevuyu iptal et > Evet. → "Randevun iptal edildi".
+- [ ] **MD4 · Servis kaydı ve puan.** Usta servis kaydını yazsın. → Ayrıntıda servis kaydı; "Ustayı puanla": yıldız, "Söylenen fiyat tuttu mu?", ödenen tutar, yorum gönderilir.
+- [ ] **MD5 · İptal.** Yaklaşan bir randevuyu iptal et > neden seç (ya da "Söylemek istemiyorum") > Evet. → "Randevun iptal edildi".
 - [ ] **MD6 · Hatırlatmalar.** Aracına 5 gün sonraya muayene koy (ME2). → Randevular'ın başında mor muayene kartı.
 
 ## ME. Araçlarım

@@ -459,7 +459,7 @@ class BaglantiKarti extends StatelessWidget {
             etiket: "WhatsApp'tan paylaş",
             simge: Icons.share_outlined,
             onPressed: () => launchUrl(
-              Uri.parse('https://wa.me/?text=${Uri.encodeComponent('$firma için randevunu buradan al: $baglanti')}'),
+              Uri.parse('https://wa.me/?text=${Uri.encodeComponent('$firma için randevunu buradan al: $baglanti?k=wa')}'),
               mode: LaunchMode.externalApplication,
             ),
           ),
@@ -468,7 +468,7 @@ class BaglantiKarti extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: baglanti));
+                  await Clipboard.setData(ClipboardData(text: '$baglanti?k=paylas'));
                   if (context.mounted) bildir(context, 'Bağlantı kopyalandı.');
                 },
                 icon: const Icon(Icons.copy, size: 20),

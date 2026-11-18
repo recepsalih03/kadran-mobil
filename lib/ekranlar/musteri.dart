@@ -920,6 +920,8 @@ class PuanlaEkrani extends StatefulWidget {
 class _PuanlaEkraniState extends State<PuanlaEkrani> {
   int _puan = 0;
   final _yorum = TextEditingController();
+  final _odenen = TextEditingController();
+  String? _fiyat;
   EylemSonucu? _sonuc;
   bool _bekliyor = false;
   static const _anlam = ['', 'Çok kötü', 'Kötü', 'İdare eder', 'İyi', 'Çok iyi'];
@@ -946,6 +948,29 @@ class _PuanlaEkraniState extends State<PuanlaEkrani> {
           ]),
           if (_puan > 0) Padding(padding: const EdgeInsets.only(top: 8), child: Text(_anlam[_puan], style: Yazi.govdeKalin)),
           const SizedBox(height: 18),
+          FutureBuilder<Katalog>(
+            future: Katalog.al(),
+            builder: (context, k) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Usta işe başlamadan söylediği fiyat tuttu mu? (isteğe bağlı)', style: Yazi.govdeKalin),
+              const SizedBox(height: 8),
+              for (final (d, e) in k.data?.fiyatUydu ?? const <(String, String)>[]) ...[
+                SecimDugmesi(
+                  secili: _fiyat == d,
+                  onTap: () => setState(() => _fiyat = _fiyat == d ? null : d),
+                  child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text(e, style: Yazi.govde))),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ]),
+          ),
+          const SizedBox(height: 10),
+          Alan(
+            etiket: 'Toplam ne kadar ödedin? (isteğe bağlı)',
+            ipucu: 'TL olarak. Ustalara gösterilmez; bölgedeki fiyatları hesaplamak için kullanılır.',
+            hata: _sonuc?.alanlar['odenen'],
+            child: MetinKutusu(kontrol: _odenen, klavye: const TextInputType.numberWithOptions(decimal: true), hata: _sonuc?.alanlar['odenen'] != null),
+          ),
+          const SizedBox(height: 18),
           Alan(
             etiket: 'Yorum (isteğe bağlı)',
             ipucu: 'Diğer araç sahipleri görür. Telefon numarası yazma.',
@@ -958,7 +983,13 @@ class _PuanlaEkraniState extends State<PuanlaEkrani> {
             bekliyor: _bekliyor,
             onPressed: () async {
               setState(() => _bekliyor = true);
-              final s = await Api.ben.eylem('degerlendir', {'randevu': widget.randevu['id'], 'puan': '$_puan', 'yorum': _yorum.text});
+              final s = await Api.ben.eylem('degerlendir', {
+                'randevu': widget.randevu['id'],
+                'puan': '$_puan',
+                'yorum': _yorum.text,
+                'odenen': _odenen.text,
+                'fiyat': ?_fiyat,
+              });
               if (!context.mounted) return;
               setState(() {
                 _sonuc = s;

@@ -118,6 +118,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
   final _sifre = TextEditingController();
   String _yontem = 'telefon';
   String? _il, _ilce;
+  String? _nereden;
   bool _onay = false;
   bool _bekliyor = false;
   EylemSonucu? _sonuc;
@@ -132,6 +133,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
       'il': _il ?? '',
       'ilce': _ilce ?? '',
       'sifre': _sifre.text,
+      'nereden': ?_nereden,
       if (_onay) 'kvkk': 'on',
     });
     if (!mounted) return;
@@ -221,6 +223,14 @@ class _KayitEkraniState extends State<KayitEkrani> {
               gruplar: [SecenekGrubu([for (final i in katalog.iller[_il] ?? const <String>[]) Secenek(i, i)])],
               onSec: (v) => setState(() => _ilce = v),
             ),
+          ),
+          const SizedBox(height: 18),
+          SecimKutusu(
+            etiket: 'Bizi nereden duydun? (isteğe bağlı)',
+            bos: 'Seçmek istemiyorum',
+            deger: _nereden,
+            gruplar: [SecenekGrubu([for (final (d, e) in katalog.nereden) Secenek(d, e)])],
+            onSec: (v) => setState(() => _nereden = v),
           ),
           const SizedBox(height: 18),
           Alan(etiket: 'Şifre', ipucu: 'En az 8 karakter.', hata: h['sifre'], child: MetinKutusu(kontrol: _sifre, gizli: true, hata: h['sifre'] != null, otomatik: const [AutofillHints.newPassword])),

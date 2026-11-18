@@ -32,7 +32,7 @@ class HatirlaticiTuru {
 }
 
 class Katalog {
-  Katalog._(this.markalar, this.hizmetler, this.yakitlar, this.iller, this.isDurumlari, this.hatirlaticiTurleri);
+  Katalog._(this.markalar, this.hizmetler, this.yakitlar, this.iller, this.isDurumlari, this.hatirlaticiTurleri, this.nereden, this.iptalNedenleri, this.fiyatUydu);
   final List<Marka> markalar;
   final List<HizmetGrubu> hizmetler;
   final List<String> yakitlar;
@@ -40,6 +40,10 @@ class Katalog {
   final Map<String, List<String>> iller;
   final List<IsDurumu> isDurumlari;
   final List<HatirlaticiTuru> hatirlaticiTurleri;
+  /// Pazar verisi soruları (isteğe bağlı): kayıtta "nereden duydun", iptal nedeni, söylenen fiyat tuttu mu.
+  final List<(String, String)> nereden;
+  final List<String> iptalNedenleri;
+  final List<(String, String)> fiyatUydu;
 
   static Katalog? _onbellek;
 
@@ -59,7 +63,18 @@ class Katalog {
     final turler = [
       for (final h in (k['hatirlaticiTurleri'] as List? ?? const [])) HatirlaticiTuru(h['tur'], h['ad'], h['ipucu'], h['hizmet'] as String?, h['oneri']),
     ];
-    return _onbellek = Katalog._(markalar, hizmetler, [for (final y in k['yakitlar'] as List) '$y'], iller, durumlar, turler);
+    List<(String, String)> ciftler(Object? v) => [for (final x in (v as List? ?? const [])) (x['deger'] as String, x['etiket'] as String)];
+    return _onbellek = Katalog._(
+      markalar,
+      hizmetler,
+      [for (final y in k['yakitlar'] as List) '$y'],
+      iller,
+      durumlar,
+      turler,
+      ciftler(k['nereden']),
+      [for (final x in (k['iptalNedenleri'] as List? ?? const [])) '$x'],
+      ciftler(k['fiyatUydu']),
+    );
   }
 
   String markaAdi(String kod) => markalar.where((m) => m.kod == kod).firstOrNull?.ad ?? kod;

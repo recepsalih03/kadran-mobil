@@ -359,9 +359,19 @@ class _RandevuTakipEkraniState extends State<RandevuTakipEkrani> {
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(foregroundColor: Renk.hayir, side: const BorderSide(color: Renk.hayir, width: 1.5)),
                     onPressed: () async {
+                      final neden = await secimSayfasi(
+                        context,
+                        baslik: 'Neden iptal ediyorsun?',
+                        arama: false,
+                        gruplar: [
+                          SecenekGrubu([for (final n in katalog.iptalNedenleri) Secenek(n, n), const Secenek('', 'Söylemek istemiyorum')],
+                              baslik: 'İsteğe bağlı; ustaya gösterilmez'),
+                        ],
+                      );
+                      if (neden == null || !context.mounted) return;
                       final evet = await onaySor(context, 'Randevuyu iptal et', '${gunVeTarih(r['gun'])} ${r['saat']} randevun iptal edilecek ve ustaya haber verilecek.', 'Evet, iptal et');
                       if (!evet || !context.mounted) return;
-                      final s = await Api.ben.eylem('randevu-iptal', {'id': r['id']});
+                      final s = await Api.ben.eylem('randevu-iptal', {'id': r['id'], 'neden': neden});
                       if (!context.mounted) return;
                       bildir(context, s.yonlendir?.contains('iptal=1') == true ? 'Randevun iptal edildi.' : (s.hata ?? 'Randevu iptal edilemedi.'));
                       if (s.hata == null) Navigator.pop(context);
